@@ -38,7 +38,7 @@ The project was built to explore real-time collaboration, WebSocket communicatio
 
 **1. Clone the repository**
 ```bash
-git clone <your-repository-url>
+git clone https://github.com/M-GII/SyncCode
 cd SyncCode
 ```
 
@@ -128,12 +128,6 @@ The production application separates the standard web application from the persi
 * **Render:** Persistent WebSocket / Yjs server.
 * **Supabase:** Managed PostgreSQL database.
 
-The frontend connects to the production WebSocket server via environment configuration:
-```env
-NEXT_PUBLIC_WS_URL=wss://your-websocket-server.onrender.com
-```
-
----
 
 ## Future Improvements
 

@@ -13,7 +13,10 @@ async function main() {
 
     const PORT = Number(process.env.PORT || process.env.WS_PORT || 1234);
 
-    const server = http.createServer();
+    const server = http.createServer((req, res) => {
+        res.writeHead(200, { "Content-Type": "text/plain" });
+        res.end("SyncCode WebSocket server is running");
+    });
     const wss = new WebSocketServer({ noServer: true });
 
     server.on("upgrade", async (request, socket, head) => {

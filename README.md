@@ -4,6 +4,7 @@ SyncCode is a real-time collaborative code editor that allows multiple users to 
 
 The project was built to explore real-time collaboration, WebSocket communication, authentication, database-backed project management, and shared application state.
 
+
 ---
 
 ## Features
@@ -38,7 +39,7 @@ The project was built to explore real-time collaboration, WebSocket communicatio
 
 **1. Clone the repository**
 ```bash
-git clone https://github.com/M-GII/SyncCode
+git clone https://github.com/M-GII/SyncCode.git
 cd SyncCode
 ```
 
@@ -107,16 +108,15 @@ Users connected to the same project synchronize changes through the WebSocket se
 
 ## Database Models
 
-The application stores core relational data using Prisma to interact with the PostgreSQL database, including:
+The application manages authentication, user sessions, project access, and chat history using Prisma with PostgreSQL:
 
-* Users
-* Authentication sessions
-* Projects
-* Project members
-* Project roles
-* Invite codes
-* Programming languages
-* Chat messages
+* **`user`**: Stores user credentials, email verification status, and profile information. Linked to accounts, sessions, project memberships, and chat messages.
+* **`account`**: Manages OAuth and auth providers linked to users, supporting tokens and expiration metrics.
+* **`session`**: Tracks active authenticated user sessions, expiration timestamps, IP addresses, and user agents.
+* **`verification`**: Handles authentication tokens and verification values.
+* **`Project`**: Stores project metadata, target programming language (`typescript` by default), unique invite code, and owner references.
+* **`ProjectMember`**: Joins `user` and `Project` with explicit roles (`owner` or `editor`) to enforce workspace permissions.
+* **`Message`**: Stores persistent real-time chat messages tied to specific projects and users with indexed timestamps.
 
 ---
 

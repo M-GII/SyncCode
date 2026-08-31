@@ -2,13 +2,13 @@ import dotenv from "dotenv";
 import http from "http";
 import { WebSocketServer } from "ws";
 import { setupWSConnection } from "y-websocket/bin/utils";
+import { jwtVerify } from "jose";
 
 if (process.env.NODE_ENV !== "production") {
     dotenv.config({ path: ".env.local" });
 }
 
 async function main() {
-    const { auth } = await import("../lib/auth/auth");
     const { prisma } = await import("../lib/prisma");
 
     const PORT = Number(process.env.PORT || process.env.WS_PORT || 1234);
@@ -17,6 +17,7 @@ async function main() {
         res.writeHead(200, { "Content-Type": "text/plain" });
         res.end("SyncCode WebSocket server is running");
     });
+
     const wss = new WebSocketServer({ noServer: true });
 
     server.on("upgrade", async (request, socket, head) => {
@@ -34,14 +35,29 @@ async function main() {
                 return;
             }
 
-            const session = await auth.api.getSession({
-                headers: new Headers({
-                    cookie: request.headers.cookie ?? "",
-                }),
-            });
+            const token = url.searchParams.get("token");
 
-            if (!session?.user) {
+            if (!token) {
                 socket.write("HTTP/1.1 401 Unauthorized\r\n\r\n");
+                socket.destroy();
+                return;
+            }
+
+            const secretValue = process.env.WS_TOKEN_SECRET;
+
+            if (!secretValue) {
+                throw new Error("WS_TOKEN_SECRET is not set");
+            }
+
+            const secret = new TextEncoder().encode(secretValue);
+
+            const { payload } = await jwtVerify(token, secret);
+
+            const userId = payload.userId as string;
+            const tokenProjectId = payload.projectId as string;
+
+            if (!userId || tokenProjectId !== projectId) {
+                socket.write("HTTP/1.1 403 Forbidden\r\n\r\n");
                 socket.destroy();
                 return;
             }
@@ -50,7 +66,7 @@ async function main() {
                 where: {
                     projectId_userId: {
                         projectId,
-                        userId: session.user.id,
+                        userId,
                     },
                 },
             });

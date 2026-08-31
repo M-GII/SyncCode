@@ -38,7 +38,7 @@ export default function ProjectCard({
                     )}
                 </CardHeader>
                 <CardContent>
-                    <p className="text-sm text-slate-500">Updated {timeAgo(new Date(updatedAt))}</p>
+                    <p className="text-sm text-slate-500">Created {timeAgo(new Date(updatedAt))}</p>
                 </CardContent>
             </Card>
         </Link>

@@ -49,9 +49,9 @@ export default function Home() {
                </h2>
                <div className="mx-auto grid max-w-4xl gap-10 md:grid-cols-3">
                  {[
-                   { n: "01", title: "Create a workspace", body: "Spin up a project and pick your stack. SyncCode sets up a Monaco-powered file tree, ready to edit." },
+                   { n: "01", title: "Create a workspace", body: "Spin up a project and pick your language. SyncCode sets up a Monaco-powered file, ready to edit." },
                    { n: "02", title: "Invite your team", body: "Share one link. Everyone who joins gets access based on the role you set for them." },
-                   { n: "03", title: "Code in sync", body: "Edits land instantly for the whole room, cursors show who's where, and chat stays next to the file." },
+                   { n: "03", title: "Code in sync", body: "Edits land instantly for the whole room, cursors show who's here, and chat stays next to the file." },
                  ].map((s) => (
                    <div key={s.n} className="flex flex-col">
                      <span className="mb-3 font-mono text-sm font-semibold text-violet-400">{s.n}</span>
@@ -87,7 +87,7 @@ export default function Home() {
                      Live presence
                    </h3>
                    <p className="text-slate-500">
-                     Colored cursors and file-level presence show exactly who's
+                     Colored cursors and file presence show exactly who's
                      viewing what, in real time.
                    </p>
                  </div>

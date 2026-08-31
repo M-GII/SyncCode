@@ -6,25 +6,35 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { generateInviteCode } from "../invite-code";
 
-export async function createProject(name: string) {
-    const session = await auth.api.getSession({ headers: await headers() });
+export async function createProject(name: string, language: string) {
+    const session = await auth.api.getSession({
+        headers: await headers(),
+    });
+
     if (!session?.user) {
         return { error: "You must be signed in to create a project." };
     }
 
     const trimmed = name.trim();
+
     if (!trimmed) {
         return { error: "Project name is required." };
+    }
+
+    if (!language) {
+        return { error: "Project language is required." };
     }
 
     let project = null;
 
     for (let attempt = 0; attempt < 5; attempt++) {
         const inviteCode = generateInviteCode();
+
         try {
             project = await prisma.project.create({
                 data: {
                     name: trimmed,
+                    language,
                     inviteCode,
                     ownerId: session.user.id,
                     members: {
@@ -35,15 +45,21 @@ export async function createProject(name: string) {
                     },
                 },
             });
+
             break;
         } catch (err: any) {
             if (err?.code === "P2002") continue;
-            return { error: "Failed to create project. Please try again." };
+
+            return {
+                error: "Failed to create project. Please try again.",
+            };
         }
     }
 
     if (!project) {
-        return { error: "Could not generate a unique invite code. Please try again." };
+        return {
+            error: "Could not generate a unique invite code. Please try again.",
+        };
     }
 
     redirect(`/project/${project.id}`);

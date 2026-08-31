@@ -53,6 +53,7 @@ model user {
   account       account[]
   session       session[]
   projectMembers ProjectMember[]
+  messages       Message[]
 }
 
 model verification {
@@ -73,11 +74,13 @@ enum ProjectRole {
 model Project {
   id         String          @id @default(cuid())
   name       String
+  language   String          @default("typescript")
   inviteCode String          @unique
   ownerId    String
   createdAt  DateTime        @default(now())
   updatedAt  DateTime        @updatedAt
   members    ProjectMember[]
+  messages Message[]
 }
 
 model ProjectMember {
@@ -91,4 +94,16 @@ model ProjectMember {
   user    user    @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([projectId, userId])
+}
+model Message {
+  id        String   @id @default(cuid())
+  projectId String
+  userId    String
+  content   String
+  createdAt DateTime @default(now())
+
+  project Project @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  user    user    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, createdAt])
 }

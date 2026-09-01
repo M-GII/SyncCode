@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { YjsContext } from "./yjs-context";
@@ -22,67 +22,86 @@ export default function WorkspaceProvider({
     userName: string;
     children: React.ReactNode;
 }) {
-    const [ready, setReady] = useState(false);
-    const docRef = useRef<Y.Doc | null>(null);
-    const providerRef = useRef<WebsocketProvider | null>(null);
+    const [doc, setDoc] = useState<Y.Doc | null>(null);
+    const [provider, setProvider] = useState<WebsocketProvider | null>(null);
 
     useEffect(() => {
-        let doc: Y.Doc | null = null;
-        let provider: WebsocketProvider | null = null;
+        const ydoc = new Y.Doc();
+
+        let currentProvider: WebsocketProvider | null = null;
+        let refreshTimer: ReturnType<typeof setTimeout> | null = null;
+        let cancelled = false;
+
+        const color =
+            CURSOR_COLORS[
+                Math.floor(Math.random() * CURSOR_COLORS.length)
+            ];
 
         async function connect() {
-            const response = await fetch(
-                `/api/ws-token?projectId=${projectId}`
-            );
+            try {
+                const response = await fetch(
+                    `/api/ws-token?projectId=${projectId}`
+                );
 
-            if (!response.ok) {
-                console.error("Failed to get websocket token");
-                return;
-            }
-
-            const { token } = await response.json();
-
-            doc = new Y.Doc();
-
-            const wsUrl =
-                process.env.NEXT_PUBLIC_WS_URL ||
-                "ws://localhost:1234";
-
-            provider = new WebsocketProvider(
-                wsUrl,
-                projectId,
-                doc,
-                {
-                    params: {
-                        token,
-                    },
+                if (!response.ok) {
+                    console.error("Failed to get websocket token");
+                    return;
                 }
-            );
 
-            provider.awareness.setLocalStateField("user", {
-                name: userName,
-                color:
-                    CURSOR_COLORS[
-                        Math.floor(
-                            Math.random() * CURSOR_COLORS.length
-                        )
-                    ],
-            });
+                const { token } = await response.json();
 
-            docRef.current = doc;
-            providerRef.current = provider;
-            setReady(true);
+                if (cancelled) return;
+
+                currentProvider?.destroy();
+
+                const wsUrl =
+                    process.env.NEXT_PUBLIC_WS_URL ||
+                    "ws://localhost:1234";
+
+                const newProvider = new WebsocketProvider(
+                    wsUrl,
+                    projectId,
+                    ydoc,
+                    {
+                        params: {
+                            token,
+                        },
+                    }
+                );
+
+                newProvider.awareness.setLocalStateField("user", {
+                    name: userName,
+                    color,
+                });
+
+                currentProvider = newProvider;
+
+                setDoc(ydoc);
+                setProvider(newProvider);
+
+                refreshTimer = setTimeout(() => {
+                    connect();
+                }, 50 * 60 * 1000);
+            } catch (error) {
+                console.error("WebSocket connection error:", error);
+            }
         }
 
         connect();
 
         return () => {
-            provider?.destroy();
-            doc?.destroy();
+            cancelled = true;
+
+            if (refreshTimer) {
+                clearTimeout(refreshTimer);
+            }
+
+            currentProvider?.destroy();
+            ydoc.destroy();
         };
     }, [projectId, userName]);
 
-    if (!ready || !docRef.current || !providerRef.current) {
+    if (!doc || !provider) {
         return (
             <div className="flex h-full w-full items-center justify-center text-sm text-slate-400">
                 Connecting…
@@ -91,12 +110,7 @@ export default function WorkspaceProvider({
     }
 
     return (
-        <YjsContext.Provider
-            value={{
-                doc: docRef.current,
-                provider: providerRef.current,
-            }}
-        >
+        <YjsContext.Provider value={{ doc, provider }}>
             {children}
         </YjsContext.Provider>
     );

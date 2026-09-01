@@ -56,6 +56,7 @@ DATABASE_URL=your_postgresql_database_url
 BETTER_AUTH_SECRET=your_auth_secret
 BETTER_AUTH_URL=http://localhost:3000
 NEXT_PUBLIC_WS_URL=ws://localhost:1234
+WS_TOKEN_SECRET=your_websocket_token_secret
 ```
 > **Note:** Do not commit `.env.local` to GitHub.
 
@@ -85,11 +86,11 @@ The WebSocket server will run at `ws://localhost:1234`.
 
 WebSocket connections are not accepted automatically. When a client attempts to connect to a project, the WebSocket server executes the following sequence:
 
-1. Reads the user's authentication session.
-2. Rejects unauthenticated users.
-3. Extracts the requested project ID.
-4. Checks the `ProjectMember` table.
-5. Allows the WebSocket upgrade only if the user belongs to the project.
+1. The Next.js app verifies the user's Better Auth session.
+2. A short-lived WebSocket token is issued for the requested project.
+3. The WebSocket server verifies the token and extracts the user and project IDs.
+4. The server checks the `ProjectMember` table.
+5. The WebSocket upgrade is allowed only if the user belongs to the project.
 
 This prevents unauthorized users from connecting to collaborative rooms they do not have access to.
 

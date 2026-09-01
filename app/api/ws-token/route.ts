@@ -52,7 +52,7 @@ export async function GET(request: Request) {
     })
         .setProtectedHeader({ alg: "HS256" })
         .setIssuedAt()
-        .setExpirationTime("5m")
+        .setExpirationTime("1h")
         .sign(secret);
 
     return NextResponse.json({ token });
